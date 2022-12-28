@@ -52,10 +52,12 @@ function App() {
     isError: false,
   });
 
+  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
+
   useEffect(() => {
     dispatchStories({ type: "STORIES_FETCH_INIT" });
 
-    fetch(`${API_ENDPOINT}React`)
+    fetch(`${API_ENDPOINT}${searchTerm}`)
       .then((response) => response.json())
       .then((result) => {
         dispatchStories({ type: "STORIES_FETCH_SUCCESS", payload: result.hits })
@@ -64,18 +66,14 @@ function App() {
         console.log(error);
         dispatchStories({ type: "STORIES_FETCH_FAILURE" });
       });
-  }, []);
+  }, [searchTerm]);
 
-  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
     localStorage.setItem("search", event.target.value);
   };
 
-  const searchedStories = stories.data.filter((story) =>
-    story.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const handleRemoveItem = (item) => {
     // console.log('handleRemoveItem', item);
@@ -102,7 +100,7 @@ function App() {
       {stories.isLoading ? (
         <p>Loading...</p>
       ) : (
-        <List list={searchedStories} onRemoveItem={handleRemoveItem} />
+        <List list={stories.data} onRemoveItem={handleRemoveItem} />
       )}
     </div>
   );
