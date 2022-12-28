@@ -1,11 +1,17 @@
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { memo, useCallback, useEffect, useReducer, useRef, useState } from "react";
 import axios from "axios";
 
 const useSemiPersistentState = (key, initialState) => {
+  const isMounted = useRef(false);
+
   const [value, setValue] = useState(localStorage.getItem(key) || initialState);
 
   useEffect(() => {
-    localStorage.setItem(key, value);
+    if (!isMounted.current) {
+      isMounted.current = true;
+    } else {
+      localStorage.setItem(key, value)
+    }
   }, [value, key]);
 
   return [value, setValue];
@@ -54,7 +60,9 @@ function App() {
   });
 
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState(
+    `${API_ENDPOINT}${searchTerm}`
+  );
 
   const handleFetchStories = useCallback(async () => {
     if (!url) return;
@@ -69,7 +77,6 @@ function App() {
     }
   }, [url]);
 
-  console.log('handleFetchStories', handleFetchStories);
 
   useEffect(() => {
     handleFetchStories();
@@ -86,9 +93,11 @@ function App() {
     e.preventDefault();
   }
 
-  const handleRemoveItem = (item) => {
+  const handleRemoveItem = useCallback((item) => {
     dispatchStories({ type: "REMOVE_STORY", payload: item });
-  };
+  }, []);
+
+  console.log('B:App');
 
   return (
     <div>
@@ -144,10 +153,11 @@ const InputWithLabel = ({
   </>
 );
 
-const List = ({ list, onRemoveItem }) =>
+const List = memo(({ list, onRemoveItem }) =>
+  console.log('B:List') ||
   list.map((item) => (
     <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
-  ));
+  )));
 
 const Item = ({ item, onRemoveItem }) => (
   <div>
