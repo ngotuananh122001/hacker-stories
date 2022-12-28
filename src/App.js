@@ -53,12 +53,13 @@ function App() {
   });
 
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
+  const [url, setUrl] = useState('');
 
   const handleFetchStories = useCallback(() => {
-    if (!searchTerm) return;
+    if (!url) return;
     dispatchStories({ type: "STORIES_FETCH_INIT" });
 
-    fetch(`${API_ENDPOINT}${searchTerm}`)
+    fetch(`${url}`)
       .then((response) => response.json())
       .then((result) => {
         dispatchStories({ type: "STORIES_FETCH_SUCCESS", payload: result.hits })
@@ -67,7 +68,7 @@ function App() {
         console.log(error);
         dispatchStories({ type: "STORIES_FETCH_FAILURE" });
       });
-  }, [searchTerm]);
+  }, [url]);
 
   console.log('handleFetchStories', handleFetchStories);
 
@@ -81,11 +82,11 @@ function App() {
     localStorage.setItem("search", event.target.value);
   };
 
+  const handleSearchSubmit = () => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`)
+  }
 
   const handleRemoveItem = (item) => {
-    // console.log('handleRemoveItem', item);
-    // console.log(stories);
-    // return true;
     dispatchStories({ type: "REMOVE_STORY", payload: item });
   };
 
@@ -101,6 +102,13 @@ function App() {
         <strong>Search:</strong>
       </InputWithLabel>
 
+      <button
+        type="button"
+        disabled={!searchTerm}
+        onClick={handleSearchSubmit}
+      >
+        Submit
+      </button>
       <hr />
 
       {stories.isError && <p>Something went wrong</p>}
