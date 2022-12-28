@@ -78,11 +78,12 @@ function App() {
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
-    localStorage.setItem("search", event.target.value);
   };
 
-  const handleSearchSubmit = () => {
-    setUrl(`${API_ENDPOINT}${searchTerm}`)
+  const handleSearchSubmit = (e) => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
+
+    e.preventDefault();
   }
 
   const handleRemoveItem = (item) => {
@@ -93,21 +94,12 @@ function App() {
     <div>
       <h1>My Hacker Stories</h1>
 
-      <InputWithLabel
-        id="search"
-        value={searchTerm}
-        onInputChange={handleSearch}
-      >
-        <strong>Search:</strong>
-      </InputWithLabel>
+      <SearchForm
+        searchTerm={searchTerm}
+        onSearchInput={handleSearch}
+        onSearchSubmit={handleSearchSubmit}
+      />
 
-      <button
-        type="button"
-        disabled={!searchTerm}
-        onClick={handleSearchSubmit}
-      >
-        Submit
-      </button>
       <hr />
 
       {stories.isError && <p>Something went wrong</p>}
@@ -120,6 +112,24 @@ function App() {
   );
 }
 
+const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
+  <form onSubmit={onSearchSubmit}>
+    <InputWithLabel
+      id="search"
+      value={searchTerm}
+      onInputChange={onSearchInput}
+    >
+      <strong>Search:</strong>
+    </InputWithLabel>
+
+    <button
+      type="submit"
+      disabled={!searchTerm}
+    >
+      Submit
+    </button>
+  </form>
+)
 const InputWithLabel = ({
   id,
   type = "text",
