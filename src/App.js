@@ -34,34 +34,57 @@ const getAsyncStories = () =>
     setTimeout(() => resolve({ data: { stories: initialStories } }), 2000)
   );
 
+// const getAsyncStories = () =>
+//   new Promise((resolve, reject) => {
+//     setTimeout(reject, 2000);
+//   })
 const storiesReducer = (state, action) => {
   switch (action.type) {
     case 'SET_STORIES':
       return action.payload;
     case 'REMOVE_STORY':
       return state.filter(story => story.objectID !== action.payload.objectID);
+    case 'STORIES_FETCH_INIT':
+      return {
+        ...state,
+        isLoading: true,
+        isError: false,
+      };
+    case 'STORIES_FETCH_SUCCESS':
+      return {
+        ...state,
+        data: action.payload,
+        isLoading: false,
+        isError: false
+      };
+    case 'STORIES_FETCH_FAILURE':
+      return {
+        ...state,
+        isLoading: false,
+        isError: true,
+      }
     default:
       return state;
   }
 };
 
 function App() {
-  const [stories, dispatchStories] = useReducer(storiesReducer, []);
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
+  const [stories, dispatchStories] = useReducer(storiesReducer, {
+    data: [],
+    isLoading: false,
+    isError: false,
+  });
 
   useEffect(() => {
-    setIsLoading(true);
+    dispatchStories({ type: "STORIES_FETCH_INIT" });
 
     getAsyncStories()
       .then((result) => {
-        dispatchStories({ type: "SET_STORIES", payload: result.data.stories });
-        setIsLoading(false);
+        dispatchStories({ type: "STORIES_FETCH_SUCCESS", payload: result.data.stories })
       })
       .catch((error) => {
         console.log(error);
-        setIsError(true);
+        dispatchStories({ type: "STORIES_FETCH_FAILURE" });
       });
   }, []);
 
@@ -72,7 +95,7 @@ function App() {
     localStorage.setItem("search", event.target.value);
   };
 
-  const searchedStories = stories.filter((story) =>
+  const searchedStories = stories.data.filter((story) =>
     story.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -94,8 +117,8 @@ function App() {
 
       <hr />
 
-      {isError && <p>Something went wrong</p>}
-      {isLoading ? (
+      {stories.isError && <p>Something went wrong</p>}
+      {stories.isLoading ? (
         <p>Loading...</p>
       ) : (
         <List list={searchedStories} onRemoveItem={handleRemoveItem} />
